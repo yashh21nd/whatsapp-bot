@@ -1,0 +1,12 @@
+﻿node_modules/
+.env
+package-lock.json
+*.log
+sessions/
+*.db
+dist/
+build/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
