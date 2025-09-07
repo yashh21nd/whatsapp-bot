@@ -1,25 +1,51 @@
-import { useState } from "react";
-import { loginWithQR } from "../api/api";
+import { useState, useEffect } from "react";
+import { socket, initiateWhatsAppConnection } from "../api/api";
 
-export default function QRLogin({ setUser }) {
-  const [qr, setQr] = useState("");
+export default function QRLogin() {
+  const [qrCode, setQrCode] = useState("");
+  const [isConnecting, setIsConnecting] = useState(false);
 
-  const handleLogin = async () => {
-    const res = await loginWithQR(qr);
-    if (res.success) setUser(res.user);
-    else alert("Invalid QR Code");
-  };
+  useEffect(() => {
+    // Listen for QR code updates
+    socket.on("whatsapp:qr", (qrDataUrl) => {
+      setQrCode(qrDataUrl);
+      setIsConnecting(true);
+    });
+
+    // Listen for ready state
+    socket.on("whatsapp:ready", (ready) => {
+      if (ready) {
+        setIsConnecting(false);
+        setQrCode("");
+      }
+    });
+
+    // Initiate connection
+    initiateWhatsAppConnection();
+
+    return () => {
+      socket.off("whatsapp:qr");
+      socket.off("whatsapp:ready");
+    };
+  }, []);
 
   return (
-    <div>
-      <h2>Login with QR Code</h2>
-      <input
-        type="text"
-        placeholder="Enter QR Code"
-        value={qr}
-        onChange={(e) => setQr(e.target.value)}
-      />
-      <button onClick={handleLogin}>Login</button>
+    <div className="qr-container">
+      <h2>WhatsApp Login</h2>
+      {isConnecting ? (
+        qrCode ? (
+          <div>
+            <p>Scan this QR code with WhatsApp</p>
+            <img src={qrCode} alt="WhatsApp QR Code" />
+          </div>
+        ) : (
+          <p>Generating QR code...</p>
+        )
+      ) : (
+        <button onClick={initiateWhatsAppConnection}>
+          Connect to WhatsApp
+        </button>
+      )}
     </div>
   );
 }

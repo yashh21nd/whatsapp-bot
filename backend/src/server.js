@@ -138,6 +138,10 @@ io.on("connection", (socket) => {
 
 // --- Routes ---
 
+app.get("/" , (req , res)  =>{
+  res.json("Hello")
+})
+
 app.get("/api/status", (req, res) => {
   res.json({ ready });
 });
