@@ -640,7 +640,7 @@ const PORT = process.env.PORT || 8081;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`
     🚀 Server is running!
-    🌐 Local:            http://${HOST}:${PORT}
+    🌐 Port:             ${PORT}
     ⚡ Environment:      ${process.env.NODE_ENV || 'development'}
     📝 Logging:         ${process.env.NODE_ENV === 'development' ? 'Detailed' : 'Production'}
     🔐 Admin API:        Protected by token
