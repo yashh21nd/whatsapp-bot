@@ -12,6 +12,7 @@ const api = axios.create({
 });
 
 // Socket.IO instance
+console.log("Initializing Socket.IO connection to:", API_URL);
 const socket = io(API_URL, {
   transports: ['websocket', 'polling'],
   reconnection: true,
@@ -20,6 +21,14 @@ const socket = io(API_URL, {
   reconnectionDelayMax: 5000,
   timeout: 20000,
   autoConnect: true
+});
+
+// Log socket configuration
+console.log("Socket.IO configuration:", {
+  url: socket.io.uri,
+  transports: socket.io.opts.transports,
+  timeout: socket.io.opts.timeout,
+  autoConnect: socket.io.opts.autoConnect
 });
 
 // Socket connection handlers
@@ -44,10 +53,13 @@ socket.on("error", (error) => {
 
 // Export API functions
 export const initiateWhatsAppConnection = async () => {
+  console.log("Initiating WhatsApp connection, API URL:", API_URL);
   try {
     const response = await api.post("/api/connect");
+    console.log("WhatsApp connection response:", response.data);
     return response.data;
   } catch (error) {
+    console.error("WhatsApp connection error:", error.response?.data || error.message);
     throw new Error("Failed to connect to WhatsApp");
   }
 };

@@ -10,13 +10,17 @@ export default function QRLogin() {
   const [socketConnected, setSocketConnected] = useState(socket.connected);
 
   useEffect(() => {
+    console.log("QRLogin mounted, socket state:", socket.connected);
+
     // Socket connection state handlers
     const handleConnect = () => {
+      console.log("Socket connected");
       setSocketConnected(true);
       setErrorMessage("");
     };
 
     const handleDisconnect = () => {
+      console.log("Socket disconnected");
       setSocketConnected(false);
       setConnectionState("disconnected");
       setErrorMessage("Lost connection to server");
@@ -33,6 +37,7 @@ export default function QRLogin() {
 
     // WhatsApp state updates
     socket.on("whatsapp:state", async (data) => {
+      console.log("WhatsApp state update:", data);
       setConnectionState(data.state);
       setErrorMessage(""); // Clear any previous errors
 
