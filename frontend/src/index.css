@@ -2,10 +2,19 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  
+  /* WhatsApp Theme Colors */
+  --whatsapp-green: #25D366;
+  --whatsapp-teal: #128C7E;
+  --whatsapp-dark: #075E54;
+  --whatsapp-light: #DCF8C6;
+  --background-light: #f0f2f5;
+  --text-primary: #111b21;
+  --text-secondary: #667781;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
+  color: var(--text-primary);
+  background-color: var(--background-light);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -24,10 +33,10 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--background-light);
+  color: var(--text-primary);
 }
 
 h1 {

@@ -1,92 +1,174 @@
 import { useState, useEffect } from "react";
 import { socket, initiateWhatsAppConnection } from "../api/api";
 import QRCode from "qrcode";
+import "../styles/QRLogin.css";
 
 export default function QRLogin() {
   const [qrCode, setQrCode] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  const [connectionState, setConnectionState] = useState("disconnected");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [socketConnected, setSocketConnected] = useState(socket.connected);
 
   useEffect(() => {
-    // Listen for QR code updates
-    socket.on("whatsapp:qr", async (qrData) => {
-      try {
-        // Convert QR data to data URL
-        const qrDataUrl = await QRCode.toDataURL(qrData);
-        setQrCode(qrDataUrl);
-        setIsConnecting(true);
-        setIsReady(false);
-      } catch (err) {
-        console.error("Failed to generate QR code:", err);
+    // Socket connection state handlers
+    const handleConnect = () => {
+      setSocketConnected(true);
+      setErrorMessage("");
+    };
+
+    const handleDisconnect = () => {
+      setSocketConnected(false);
+      setConnectionState("disconnected");
+      setErrorMessage("Lost connection to server");
+    };
+
+    const handleConnectError = (error) => {
+      setSocketConnected(false);
+      setErrorMessage(error.message);
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
+
+    // WhatsApp state updates
+    socket.on("whatsapp:state", async (data) => {
+      setConnectionState(data.state);
+      setErrorMessage(""); // Clear any previous errors
+
+      if (data.state === "qr_ready" && data.qr) {
+        try {
+          const qrDataUrl = await QRCode.toDataURL(data.qr);
+          setQrCode(qrDataUrl);
+        } catch (err) {
+          console.error("Failed to generate QR code:", err);
+          setErrorMessage("Failed to generate QR code");
+        }
+      } else if (data.state === "connected") {
+        setQrCode("");
       }
     });
 
-    // Listen for ready state
-    socket.on("whatsapp:ready", (ready) => {
-      setIsReady(ready);
-      if (ready) {
-        setIsConnecting(false);
-        setQrCode("");
-      }
+    // Listen for errors
+    socket.on("whatsapp:error", (data) => {
+      console.error("WhatsApp error:", data.error);
+      setErrorMessage(data.error);
     });
 
     // Initial connection attempt
     handleConnect();
 
     return () => {
-      socket.off("whatsapp:qr");
-      socket.off("whatsapp:ready");
+      socket.off("whatsapp:state");
+      socket.off("whatsapp:error");
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
     };
   }, []);
 
   const handleConnect = async () => {
-    setIsConnecting(true);
+    if (!socketConnected) {
+      setErrorMessage("Waiting for server connection...");
+      socket.connect();
+      return;
+    }
+
+    setConnectionState("connecting");
+    setErrorMessage("");
     try {
       await initiateWhatsAppConnection();
     } catch (error) {
       console.error("Failed to connect:", error);
-      setIsConnecting(false);
+      setConnectionState("disconnected");
+      // Add better error handling
+      // we can just use error.message
+      setErrorMessage(error.message || "Failed to connect to WhatsApp");
     }
   };
 
   return (
-    <div className="qr-container" style={{ textAlign: 'center', padding: '20px' }}>
-      <h2>WhatsApp Login</h2>
-      {isReady ? (
-        <div>
-          <h3>WhatsApp Connected!</h3>
-          <p>You can now use the bot</p>
+    <div className="main-container">
+      <nav className="navbar">
+        <div className="nav-content">
+          <img src="/whatsapp-logo.svg" alt="WhatsApp" className="logo" />
+          <h1>WhatsApp Bot</h1>
         </div>
-      ) : isConnecting ? (
-        qrCode ? (
-          <div>
-            <h3>Scan this QR code with WhatsApp</h3>
-            <img 
-              src={qrCode} 
-              alt="WhatsApp QR Code" 
-              style={{ 
-                maxWidth: '300px', 
-                margin: '20px auto',
-                display: 'block'
-              }} 
-            />
-            <p>Open WhatsApp on your phone and scan the QR code</p>
+      </nav>
+      
+      <div className="content-container">
+        <section className="qr-section">
+          <div className="qr-card">
+            <div className="qr-wrapper">
+              <h2>Connect to WhatsApp</h2>
+              
+              {errorMessage && (
+                <div className="error-message">
+                  <p>{errorMessage}</p>
+                  <button className="retry-button" onClick={handleConnect}>
+                    Retry Connection
+                  </button>
+                </div>
+              )}
+              
+              {!errorMessage && (
+                <>
+                  {connectionState === "connected" && (
+                    <div className="success-message">
+                      <h3>WhatsApp Connected!</h3>
+                      <p>Your bot is now ready to use</p>
+                    </div>
+                  )}
+                  
+                  {connectionState === "qr_ready" && qrCode && (
+                    <div>
+                      <div className="qr-code-container">
+                        <img src={qrCode} alt="WhatsApp QR Code" className="qr-code" />
+                      </div>
+                      <div className="instructions">
+                        <ol>
+                          <li>Open WhatsApp on your phone</li>
+                          <li>Tap Menu or Settings and select WhatsApp Web</li>
+                          <li>Point your phone to this screen to capture the code</li>
+                        </ol>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {(connectionState === "loading" || connectionState === "connecting" || (connectionState === "qr_ready" && !qrCode)) && (
+                    <div className="loading">
+                      <div className="spinner"></div>
+                      <p>{connectionState === "loading" ? "Loading WhatsApp..." : "Generating QR code..."}</p>
+                    </div>
+                  )}
+                  
+                  {connectionState === "disconnected" && (
+                    <button className="connect-button" onClick={handleConnect}>
+                      Connect to WhatsApp
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        ) : (
-          <p>Generating QR code...</p>
-        )
-      ) : (
-        <button 
-          onClick={handleConnect}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            cursor: 'pointer'
-          }}
-        >
-          Connect to WhatsApp
-        </button>
-      )}
+        </section>
+
+        <section className="about-section">
+          <div className="about-card">
+            <h2>About This Bot</h2>
+            <ul>
+              <li>Perform mathematical calculations</li>
+              <li>Engage in personal conversations</li>
+              <li>Real-time message processing</li>
+              <li>Secure WhatsApp Web integration</li>
+            </ul>
+            <div className="developer-info">
+              <p className="developer-name">Yash Shinde</p>
+              <p className="developer-title">Bot Developer</p>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
