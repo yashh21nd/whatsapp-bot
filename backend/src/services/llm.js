@@ -21,6 +21,7 @@ export async function generateLLMReply(context, userMessage) {
       temperature: 0.5,
       max_tokens: 120,
     });
+    
 
     return resp.choices?.[0]?.message?.content?.trim() || "Got it!";
   } catch (e) {

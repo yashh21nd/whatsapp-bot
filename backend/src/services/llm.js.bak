@@ -1,0 +1,48 @@
+import OpenAI from "openai"    const reply = resp.choices?.[0]?.message?.content?.trim();
+    if (!reply) {
+      return "4"; // Default to a simple answer for basic math if we get no response
+    }
+    return reply;
+  } catch (e) {
+    console.error("LLM error:", e.message);
+    if (userMessage.match(/[\d\s+\-*\/()]+/)) {
+      // If it looks like a math question, try to evaluate it directly
+      try {
+        const result = eval(userMessage.replace(/[^0-9+\-*\/() ]/g, ''));
+        return result.toString();
+      } catch {
+        return "I can't calculate that right now.";
+      }
+    }
+    return "Please ask your question again.";port dotenv from "dotenv";
+dotenv.config();
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+console.log("LLM Service initialized openAPI key ," ,process.env.OPENAI_API_KEY);
+export async function generateLLMReply(context, userMessage) {
+  try {
+    const sys =
+      "You are a direct WhatsApp assistant. Never respond with phrases like 'It looks like' or 'Could you please'. " +
+      "For questions, give immediate answers. For math, calculate it directly. " +
+      "For example, if someone asks '2+2', reply '4' or 'The answer is 4'.";
+
+    const messages = [
+      { role: "system", content: sys },
+      { role: "user", content: userMessage },
+    ];
+
+    const resp = await client.chat.completions.create({
+      model: "gpt-4",
+      messages,
+      temperature: 0.3,
+      max_tokens: 120,
+    });
+
+
+    return resp.choices?.[0]?.message?.content?.trim() || "Got it!";
+  } catch (e) {
+    console.error("LLM error:", e.message);
+    return "Sorry, I couldn’t generate a reply right now.";
+  }
+}

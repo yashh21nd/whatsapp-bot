@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: whatsapp-bot-backend
+    env: node
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DASHBOARD_ORIGIN
+        sync: false
+    healthCheckPath: /
+    autoDeploy: true

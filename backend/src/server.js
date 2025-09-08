@@ -339,7 +339,6 @@ const MAX_MESSAGES_PER_WINDOW = 30;
 client.on('message', async (msg) => {
     if (msg.fromMe) return;
     const chatId = msg.from;
-    console.log("We are here recived or sent a message " , msg); 
     // Rate limiting check
     const now = Date.now();
     const userMessages = messageRateLimit.get(chatId) || [];
@@ -637,9 +636,8 @@ process.on('SIGINT', gracefulShutdown);
 
 // Start server
 const PORT = process.env.PORT || 8081;
-const HOST = process.env.HOST || 'localhost';
 
-server.listen(PORT, HOST, () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`
     🚀 Server is running!
     🌐 Local:            http://${HOST}:${PORT}
