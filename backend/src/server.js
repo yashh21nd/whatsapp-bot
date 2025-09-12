@@ -134,6 +134,12 @@ app.use(cors({
     maxAge: 600
 }));
 
+// Auth and payment routes
+import authRoutes from './routes/auth.js';
+import paymentRoutes from './routes/payment.js';
+app.use('/api/auth', authRoutes);
+app.use('/api/payment', paymentRoutes);
+
 // Apply rate limiting to API routes
 app.use('/api', apiLimiter);
 
@@ -164,30 +170,42 @@ if (!existsSync(SESSION_DIR)) {
     mkdirSync(SESSION_DIR, { recursive: true });
 }
 
+const SESSION_FILE_PATH = `${SESSION_DIR}/whatsapp-session.json`;
+let sessionData = null;
+try {
+    if (existsSync(SESSION_FILE_PATH)) {
+        sessionData = JSON.parse(require('fs').readFileSync(SESSION_FILE_PATH));
+        console.log('Loaded WhatsApp session from file.');
+    }
+} catch (err) {
+    console.warn('Failed to load WhatsApp session:', err.message);
+}
+
 const client = new Client({
-    puppeteer: {
-        headless: true,
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
-            '--no-first-run',
-            '--no-zygote',
-            '--disable-gpu',
-            '--disable-software-rasterizer',
-            '--disable-extensions',
-            '--disable-default-apps',
-            '--window-size=1280,720'
-        ],
-        executablePath: CHROMIUM_PATH,
-        timeout: 120000,
-        defaultViewport: { width: 1280, height: 720 }
-    },
-    qrMaxRetries: 3,
-    restartOnAuthFail: true,
-    takeoverOnConflict: true,
-    userAgent: 'WhatsApp/2.2326.10 Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36'
+        puppeteer: {
+                headless: true,
+                args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-accelerated-2d-canvas',
+                        '--no-first-run',
+                        '--no-zygote',
+                        '--disable-gpu',
+                        '--disable-software-rasterizer',
+                        '--disable-extensions',
+                        '--disable-default-apps',
+                        '--window-size=1280,720'
+                ],
+                executablePath: CHROMIUM_PATH,
+                timeout: 120000,
+                defaultViewport: { width: 1280, height: 720 }
+        },
+        session: sessionData,
+        qrMaxRetries: 3,
+        restartOnAuthFail: true,
+        takeoverOnConflict: true,
+        userAgent: 'WhatsApp/2.2326.10 Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36'
 });
 
 // State management
@@ -241,22 +259,30 @@ client.on('qr', async (qr) => {
 });
 
 client.on('ready', () => {
-    console.log('Client is ready!');
-    ready = true;
-    lastQR = null; // Clear the QR code
-    reconnectAttempts = 0;
-    isInitializing = false;
-    connectionState.clientState = 'connected';
-    connectionState.lastError = null;
-    
-    io.emit('whatsapp:state', {
-        state: 'connected',
-        ready: true,
-        timestamp: Date.now()
-    });
+        console.log('Client is ready!');
+        ready = true;
+        lastQR = null; // Clear the QR code
+        reconnectAttempts = 0;
+        isInitializing = false;
+        connectionState.clientState = 'connected';
+        connectionState.lastError = null;
 
-    // Initialize message handling
-    console.log('Initializing message handlers...');
+        // Save session to file for persistence
+        client.getSession().then(session => {
+            require('fs').writeFileSync(SESSION_FILE_PATH, JSON.stringify(session));
+            console.log('WhatsApp session saved to file.');
+        }).catch(err => {
+            console.warn('Failed to save WhatsApp session:', err.message);
+        });
+
+        io.emit('whatsapp:state', {
+                state: 'connected',
+                ready: true,
+                timestamp: Date.now()
+        });
+
+        // Initialize message handling
+        console.log('Initializing message handlers...');
 });
 
 client.on('loading_screen', (percent, message) => {
@@ -296,7 +322,7 @@ client.on('disconnected', async (reason) => {
     ready = false;
     isInitializing = false;
     connectionState.clientState = 'disconnected';
-    
+
     io.emit('whatsapp:state', {
         state: 'disconnected',
         ready: false,
@@ -308,14 +334,20 @@ client.on('disconnected', async (reason) => {
         // Clean up the existing session
         await client.destroy();
         console.log('Cleaned up existing session');
-        
+
+        // Remove session file to force new QR if needed
+        if (existsSync(SESSION_FILE_PATH)) {
+          require('fs').unlinkSync(SESSION_FILE_PATH);
+          console.log('WhatsApp session file deleted.');
+        }
+
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
             reconnectAttempts++;
             console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
-            
+
             // Wait before attempting to reconnect
-            await new Promise(resolve => setTimeout(resolve, RECONNECT_INTERVAL));
-            
+            await new Promise(resolve => setTimeout(resolve, RECONNECT_INTERVAL * 2));
+
             // Initialize new connection
             if (!isInitializing && !ready) {
                 isInitializing = true;
