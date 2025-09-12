@@ -1,31 +1,37 @@
-import OpenAI from "openai";
-import dotenv from "dotenv";
-dotenv.config();
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
+// Free local AI: simple rule-based reply (can be replaced with a local model)
 export async function generateLLMReply(context, userMessage) {
   try {
-    const sys =
-      "You are a concise, friendly WhatsApp assistant. " +
-      "Keep replies short, helpful, and conversational.";
-
-    const messages = [
-      { role: "system", content: sys },
-      { role: "user", content: `Chat history:\n${context}\n\nNew message: ${userMessage}` },
-    ];
-
-    const resp = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-      temperature: 0.5,
-      max_tokens: 120,
-    });
-    
-
-    return resp.choices?.[0]?.message?.content?.trim() || "Got it!";
+    // Example: echo user message, add friendly response
+    if (!userMessage || userMessage.trim().length === 0) {
+      return "I'm here! Please send a message.";
+    }
+    // Add simple rules for common questions
+    const lower = userMessage.toLowerCase();
+    if (lower.includes("hello") || lower.includes("hi")) {
+      return "Hello! How can I help you today?";
+    }
+    if (lower.includes("bye") || lower.includes("goodbye")) {
+      return "Goodbye! Have a great day!";
+    }
+    if (lower.includes("help")) {
+      return "You can ask me anything about WhatsApp, subscriptions, or bot features.";
+    }
+    // Math example
+    if (lower.match(/\d+ [\+\-\*\/] \d+/)) {
+      try {
+        // Evaluate simple math
+        // eslint-disable-next-line no-eval
+        const result = eval(lower.match(/\d+ [\+\-\*\/] \d+/)[0]);
+        return `The answer is ${result}.`;
+      } catch {
+        return "Sorry, I couldn't calculate that.";
+      }
+    }
+    // Default: echo
+    return `You said: ${userMessage}`;
   } catch (e) {
-    console.error("LLM error:", e.message);
-    return "Sorry, I couldn’t generate a reply right now.";
+    console.error("Local AI error:", e.message);
+    return "Sorry, something went wrong. Please try again.";
   }
 }
