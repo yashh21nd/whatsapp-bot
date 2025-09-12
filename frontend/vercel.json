@@ -4,10 +4,10 @@
   "installCommand": "npm install",
   "framework": "vite",
   "outputDirectory": "dist",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
