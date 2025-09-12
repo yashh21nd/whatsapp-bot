@@ -126,7 +126,7 @@ const detailedLogger = morgan((tokens, req, res) => {
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan('dev'));
 app.use(cors({
-    origin: process.env.DASHBOARD_ORIGIN || "http://localhost:5173",
+    origin: process.env.DASHBOARD_ORIGIN || "https://whatsapp-bot-one-rho.vercel.app",
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
