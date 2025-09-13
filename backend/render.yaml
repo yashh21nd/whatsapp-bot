@@ -25,6 +25,6 @@ services:
       - key: SMTP_USER
         value: apikey
       - key: SMTP_PASS
-        value: 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
+        sync: false
     healthCheckPath: /
     autoDeploy: true
