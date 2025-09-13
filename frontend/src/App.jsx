@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import QRLogin from "./components/QRLogin";
 import Status from "./components/Status";
 import ChatBox from "./components/ChatBox";
@@ -6,6 +6,9 @@ import Messages from "./components/Messages";
 import Rules from "./components/Rules";
 
 function App() {
+  useEffect(() => {
+    console.log("App mounted");
+  }, []);
   const [user, setUser] = useState(null);
   const [messages, setMessages] = useState([]);
 

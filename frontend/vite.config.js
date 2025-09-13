@@ -10,6 +10,23 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          socket: ['socket.io-client']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  },
+  resolve: {
+    alias: {
+      '@': '/src'
+    }
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'socket.io-client']
   }
 })

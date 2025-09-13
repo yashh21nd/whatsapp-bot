@@ -8,9 +8,23 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: OPENAI_API_KEY
-        sync: false
+      - key: PORT
+        value: 8081
+      - key: MONGODB_URI
+        value: mongodb+srv://yashshinde2151:Yashinde@21@whatsapp-bot.vi9nesr.mongodb.net/?retryWrites=true&w=majority&appName=whatsapp-bot
       - key: DASHBOARD_ORIGIN
-        sync: false
+        value: https://whatsapp-bot-one-rho.vercel.app
+      - key: SESSION_DIR
+        value: ./sessions
+      - key: ADMIN_TOKEN
+        value: whatsappbot1234
+      - key: SMTP_HOST
+        value: smtp.sendgrid.net
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        value: apikey
+      - key: SMTP_PASS
+        value: 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
     healthCheckPath: /
     autoDeploy: true
