@@ -12,7 +12,6 @@ import rateLimit from "express-rate-limit";
 import { saveMessage, getMessages } from "./models/messages.js";
 import { getRules, addRule, updateRule, deleteRule } from "./models/rules.js";
 import { generateLLMReply } from "./services/llm.js";
-import { io } from "socket.io-client";
 
 // Custom error handler
 class AppError extends Error {
