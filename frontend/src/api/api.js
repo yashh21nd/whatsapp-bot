@@ -78,15 +78,3 @@ export const fetchRules = async () => {
   return response.data;
 };
 
-// Socket.IO server setup (for reference, not to be included in the client code)
-const io = new Server(server, {
-  cors: {
-    origin: [
-      "http://localhost:5173",
-      "https://your-frontend-url.vercel.app"
-    ],
-    methods: ["GET", "POST"],
-    credentials: true
-  },
-  transports: ['websocket', 'polling']
-});
