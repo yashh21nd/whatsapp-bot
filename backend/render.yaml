@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: whatsapp-bot-backend
+    env: node
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8081
+      - key: MONGODB_URI
+        value: ${MONGODB_URI}
+      - key: DASHBOARD_ORIGIN
+        value: https://whatsapp-bot-one-rho.vercel.app
+      - key: SESSION_DIR
+        value: ./sessions
+      - key: ADMIN_TOKEN
+        value: whatsappbot1234
+      - key: SMTP_HOST
+        value: smtp.sendgrid.net
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        value: apikey
+      - key: SMTP_PASS
+        value: ${SMTP_PASS}
+    healthCheckPath: /
+    autoDeploy: true
+dependencies:
+  mongoose: "^<version>"
+  # ...other dependencies
