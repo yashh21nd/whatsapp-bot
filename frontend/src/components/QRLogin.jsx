@@ -116,23 +116,19 @@ export default function QRLogin({ user, setUser }) {
           <h1>WhatsApp Bot</h1>
         </div>
       </nav>
-      
       <div className="content-container">
         <section className="qr-section">
           <div className="qr-card">
             <div className="qr-wrapper">
               <h2>Connect to WhatsApp</h2>
-              
-              {errorMessage && (
+              {errorMessage ? (
                 <div className="error-message">
                   <p>{errorMessage}</p>
                   <button className="retry-button" onClick={handleConnect}>
                     Retry Connection
                   </button>
                 </div>
-              )}
-              
-              {!errorMessage && (
+              ) : (
                 <>
                   {connectionState === "connected" && (
                     <div className="success-message">
@@ -140,7 +136,6 @@ export default function QRLogin({ user, setUser }) {
                       <p>Your bot is now ready to use</p>
                     </div>
                   )}
-                  
                   {connectionState === "qr_ready" && qrCode && (
                     <div>
                       <div className="qr-code-container">
@@ -155,14 +150,12 @@ export default function QRLogin({ user, setUser }) {
                       </div>
                     </div>
                   )}
-                  
                   {(connectionState === "loading" || connectionState === "connecting" || (connectionState === "qr_ready" && !qrCode)) && (
                     <div className="loading">
                       <div className="spinner"></div>
                       <p>{connectionState === "loading" ? "Loading WhatsApp..." : "Generating QR code..."}</p>
                     </div>
                   )}
-                  
                   {connectionState === "disconnected" && (
                     <button className="connect-button" onClick={handleConnect}>
                       Connect to WhatsApp
@@ -173,7 +166,6 @@ export default function QRLogin({ user, setUser }) {
             </div>
           </div>
         </section>
-
         <section className="about-section">
           <div className="about-card" style={{ fontFamily: 'Segoe UI, Arial, sans-serif', fontSize: '1.1rem', lineHeight: '1.7', maxHeight: '500px', overflowY: 'auto', padding: '2rem' }}>
             <h2 style={{ fontFamily: 'Montserrat, Segoe UI, Arial, sans-serif', fontWeight: 700, fontSize: '2rem', color: '#176d5c', marginBottom: '1rem' }}>About This Bot</h2>
