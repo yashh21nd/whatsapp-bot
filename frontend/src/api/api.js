@@ -1,7 +1,7 @@
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const API_URL = "https://whatsapp-bot-6tsq.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || "https://whatsapp-bot-6tsq.onrender.com";
 
 // Create axios instance
 const api = axios.create({
@@ -79,13 +79,14 @@ export const fetchRules = async () => {
 };
 
 // Socket.IO server setup (for reference, not to be included in the client code)
-const io = require("socket.io")(server, {
+const io = new Server(server, {
   cors: {
     origin: [
-      "http://localhost:5173", // for local development
-      "https://whatsapp-bot-3bvn.vercel.app/" // for production
+      "http://localhost:5173",
+      "https://your-frontend-url.vercel.app"
     ],
     methods: ["GET", "POST"],
     credentials: true
-  }
+  },
+  transports: ['websocket', 'polling']
 });
