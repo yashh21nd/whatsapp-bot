@@ -13,6 +13,7 @@ const api = axios.create({
 // Socket.IO instance
 console.log("Initializing Socket.IO connection to:", API_URL);
 const socket = io(API_URL, {
+  path: '/socket.io',
   transports: ['websocket', 'polling'],
   reconnection: true,
   reconnectionAttempts: 5,
