@@ -1,4 +1,3 @@
-}
 import { useState, useEffect } from "react";
 import { socket, initiateWhatsAppConnection } from "../api/api";
 import QRCode from "qrcode";
