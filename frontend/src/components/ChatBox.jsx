@@ -2,7 +2,7 @@ import { useState } from "react";
 import { sendMessage } from "../api/api";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:8081");
+const socket = io("https://whatsapp-bot-3bvn.vercel.app/");
 
 export default function ChatBox({ user, setMessages }) {
   const [text, setText] = useState("");

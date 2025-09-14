@@ -10,13 +10,26 @@ function App() {
     console.log("App mounted");
   }, []);
   const [user, setUser] = useState(null);
+  const [showSignup, setShowSignup] = useState(false);
   const [messages, setMessages] = useState([]);
 
   return (
     <div className="App">
       {!user ? (
-        <QRLogin setUser={setUser} />
+        showSignup ? (
+          <Signup onSignup={setUser} />
+        ) : (
+          <Login onLogin={setUser} />
+        )
       ) : (
+        <QRLogin user={user} setUser={setUser} />
+      )}
+      {!user && (
+        <button onClick={() => setShowSignup(!showSignup)} style={{marginTop: 20}}>
+          {showSignup ? "Already have an account? Login" : "Don't have an account? Sign Up"}
+        </button>
+      )}
+      {user && (
         <>
           <Status user={user} />
           <Messages messages={messages} />
