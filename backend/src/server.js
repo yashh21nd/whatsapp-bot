@@ -37,8 +37,11 @@ console.log('Starting server...');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: { 
-        origin: process.env.DASHBOARD_ORIGIN || "http://localhost:5173",
+    cors: {
+        origin: [
+            "http://localhost:5173",
+            "https://whatsapp-bot-3bvn.vercel.app"
+        ],
         methods: ['GET', 'POST', 'OPTIONS'],
         credentials: true
     },
@@ -126,7 +129,10 @@ const detailedLogger = morgan((tokens, req, res) => {
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan('dev'));
 app.use(cors({
-    origin: process.env.DASHBOARD_ORIGIN || "https://whatsapp-bot-one-rho.vercel.app",
+    origin: [
+        "http://localhost:5173",
+        "https://whatsapp-bot-3bvn.vercel.app"
+    ],
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
