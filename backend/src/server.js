@@ -12,6 +12,7 @@ import rateLimit from "express-rate-limit";
 import { saveMessage, getMessages } from "./models/messages.js";
 import { getRules, addRule, updateRule, deleteRule } from "./models/rules.js";
 import { generateLLMReply } from "./services/llm.js";
+import { io } from "socket.io-client";
 
 // Custom error handler
 class AppError extends Error {
@@ -36,11 +37,11 @@ console.log('Starting server...');
 // Express setup
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
+const ioServer = new Server(server, {
     cors: {
         origin: [
-            "http://localhost:5173",
-            "https://whatsapp-bot-3bvn.vercel.app"
+            "https://whatsapp-bot-6tsq.vercel.app",
+            "https://whatsapp-bot-one-rho.vercel.app"
         ],
         methods: ['GET', 'POST', 'OPTIONS'],
         credentials: true
@@ -51,7 +52,7 @@ const io = new Server(server, {
 });
 
 // Socket connection handling
-io.on('connection', (socket) => {
+ioServer.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
     // Send initial state if WhatsApp is already connected
@@ -130,8 +131,8 @@ app.use(express.json({ limit: '10kb' }));
 app.use(morgan('dev'));
 app.use(cors({
     origin: [
-        "http://localhost:5173",
-        "https://whatsapp-bot-3bvn.vercel.app"
+        "https://whatsapp-bot-6tsq.vercel.app",
+        "https://whatsapp-bot-one-rho.vercel.app"
     ],
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
@@ -246,7 +247,7 @@ client.on('qr', async (qr) => {
         connectionState.clientState = 'awaiting_qr_scan';
         
         // Send QR and state to all connected clients
-        io.emit('whatsapp:state', {
+        ioServer.emit('whatsapp:state', {
             state: 'qr_ready',
             qr: qr,
             ready: false,
@@ -257,7 +258,7 @@ client.on('qr', async (qr) => {
     } catch (error) {
         console.error('Error handling QR code:', error);
         connectionState.lastError = error.message;
-        io.emit('whatsapp:error', { 
+        ioServer.emit('whatsapp:error', { 
             error: 'QR code generation failed',
             timestamp: Date.now()
         });
@@ -281,7 +282,7 @@ client.on('ready', () => {
             console.warn('Failed to save WhatsApp session:', err.message);
         });
 
-        io.emit('whatsapp:state', {
+        ioServer.emit('whatsapp:state', {
                 state: 'connected',
                 ready: true,
                 timestamp: Date.now()
@@ -294,7 +295,7 @@ client.on('ready', () => {
 client.on('loading_screen', (percent, message) => {
     console.log('Loading screen:', percent, '%', message);
     connectionState.clientState = 'loading';
-    io.emit('whatsapp:state', {
+    ioServer.emit('whatsapp:state', {
         state: 'loading',
         percent,
         message,
@@ -305,7 +306,7 @@ client.on('loading_screen', (percent, message) => {
 client.on('authenticated', () => {
     console.log('Client authenticated');
     connectionState.clientState = 'authenticated';
-    io.emit('whatsapp:state', {
+    ioServer.emit('whatsapp:state', {
         state: 'authenticated',
         timestamp: Date.now()
     });
@@ -315,7 +316,7 @@ client.on('auth_failure', (error) => {
     console.error('Auth failure:', error);
     connectionState.clientState = 'auth_failed';
     connectionState.lastError = error.message;
-    io.emit('whatsapp:state', {
+    ioServer.emit('whatsapp:state', {
         state: 'auth_failed',
         error: error.message,
         timestamp: Date.now()
@@ -329,7 +330,7 @@ client.on('disconnected', async (reason) => {
     isInitializing = false;
     connectionState.clientState = 'disconnected';
 
-    io.emit('whatsapp:state', {
+    ioServer.emit('whatsapp:state', {
         state: 'disconnected',
         ready: false,
         reason: reason,
@@ -392,7 +393,7 @@ client.on('message', async (msg) => {
 
     // Save incoming message for dashboard
     await saveMessage(chatId, msg.from, "me", msg.body, "in", "incoming");
-    io.emit("message:new", {
+    ioServer.emit("message:new", {
         chatId,
         from: msg.from,
         body: msg.body,
@@ -438,7 +439,7 @@ client.on('message', async (msg) => {
             const result = eval(messageText.replace(/[^0-9+\-*/(). ]/g, ''));
             await msg.reply(`The result is: ${result}`);
             await saveMessage(chatId, "me", msg.from, `The result is: ${result}`, "out", "math");
-            io.emit("reply:sent", {
+            ioServer.emit("reply:sent", {
                 chatId,
                 to: msg.from,
                 body: `The result is: ${result}`,
@@ -478,7 +479,7 @@ client.on('message', async (msg) => {
         try {
             await msg.reply(matched.reply);
             await saveMessage(chatId, "me", msg.from, matched.reply, "out", "rule");
-            io.emit("reply:sent", {
+            ioServer.emit("reply:sent", {
                 chatId,
                 to: msg.from,
                 body: matched.reply,
@@ -497,7 +498,7 @@ client.on('message', async (msg) => {
         if (llmReply) {
             await msg.reply(llmReply);
             await saveMessage(chatId, "me", msg.from, llmReply, "out", "llm");
-            io.emit("reply:sent", {
+            ioServer.emit("reply:sent", {
                 chatId,
                 to: msg.from,
                 body: llmReply,
@@ -511,7 +512,7 @@ client.on('message', async (msg) => {
         const fallbackReply = "I'm having trouble processing your message. Please try again later.";
         await msg.reply(fallbackReply);
         await saveMessage(chatId, "me", msg.from, fallbackReply, "out", "fallback");
-        io.emit("reply:sent", {
+        ioServer.emit("reply:sent", {
             chatId,
             to: msg.from,
             body: fallbackReply,
@@ -522,12 +523,12 @@ client.on('message', async (msg) => {
 });
 
 // Socket.IO setup without auth
-io.use((socket, next) => {
+ioServer.use((socket, next) => {
     next();
 });
 
 // Socket.IO connection handler
-io.on("connection", (socket) => {
+ioServer.on("connection", (socket) => {
     console.log("Dashboard connected");
     
     if (ready) {
@@ -685,3 +686,28 @@ server.listen(PORT, '0.0.0.0', () => {
     🤖 WhatsApp Client:  ${connectionState.clientState}
     `);
 });
+
+// Client-side socket connection (for testing)
+// const API_URL = process.env.API_URL || 'http://localhost:8081';
+// const socket = io(API_URL, {
+//     transports: ['websocket', 'polling'],
+//     reconnectionAttempts: 5,
+//     reconnectionDelay: 1000,
+//     withCredentials: true
+// });
+
+// socket.on('connect', () => {
+//     console.log('Connected to server:', socket.id);
+// });
+
+// socket.on('disconnect', (reason) => {
+//     console.log('Disconnected from server:', reason);
+// });
+
+// socket.on('whatsapp:state', (state) => {
+//     console.log('WhatsApp state changed:', state);
+// });
+
+// socket.on('whatsapp:error', (error) => {
+//     console.error('WhatsApp error:', error);
+// });
