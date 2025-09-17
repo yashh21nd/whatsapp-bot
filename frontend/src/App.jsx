@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import QRLogin from "./components/QRLogin";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
 import Status from "./components/Status";
 import ChatBox from "./components/ChatBox";
 import Messages from "./components/Messages";
