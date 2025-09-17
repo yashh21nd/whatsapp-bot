@@ -16,13 +16,12 @@ export default function QRLogin({ user, setUser }) {
   const [connectionState, setConnectionState] = useState("disconnected");
   const [errorMessage, setErrorMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(socket.connected);
-
   // Prevent connection if user is not authenticated
   useEffect(() => {
     if (!user) {
       setErrorMessage("Please login or signup first.");
       return;
-    }
+    }})
     // ...existing code...
 
   useEffect(() => {
@@ -200,7 +199,7 @@ export default function QRLogin({ user, setUser }) {
                 <b>Developer Information:</b><br/>
                 <span style={{ fontWeight: 600, color: '#176d5c' }}>Yash Shinde</span><br/>
                 <span style={{ fontStyle: 'italic', color: '#444' }}>WhatsApp-Bot-Developer</span><br/>
-                <span style={{ color: '#888' }}>Contact: yashshinde@example.com</span><br/><br/>
+                <span style={{ color: '#888' }}>Contact: yashshinde.dev.work@gmail.com</span><br/><br/>
                 {/* Add more lines as needed for full 300-500 lines description */}
                 <br/><br/>
                 Thank you for choosing WhatsApp Bot. Your productivity, privacy, and satisfaction are our top priorities.<br/><br/>
