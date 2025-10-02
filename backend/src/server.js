@@ -125,14 +125,26 @@ const detailedLogger = morgan((tokens, req, res) => {
 // Middleware setup
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan('dev'));
+
+// Enhanced CORS configuration
 app.use(cors({
     origin: true,
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with', 'Accept', 'Origin'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     credentials: true,
-    maxAge: 600
+    maxAge: 600,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
+
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.sendStatus(204);
+});
 
 // Auth and payment routes
 import authRoutes from './routes/auth.js';
@@ -549,6 +561,11 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/status", (req, res) => {
+    // Ensure CORS headers are set
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
     res.json(formatResponse({
         ready,
         connectionState,
@@ -559,6 +576,11 @@ app.get("/api/status", (req, res) => {
 
 app.post("/api/connect", async (req, res, next) => {
     try {
+        // Ensure CORS headers are set
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        
         // Check if already initializing or connected
         if (isInitializing) {
             throw new AppError(400, 'WhatsApp client is already initializing');
@@ -600,6 +622,11 @@ app.post("/api/connect", async (req, res, next) => {
 
 app.get("/api/qr", (req, res, next) => {
     try {
+        // Ensure CORS headers are set
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        
         if (!lastQR) {
             throw new AppError(404, 'No QR code available. Try connecting first.');
         }
@@ -608,6 +635,74 @@ app.get("/api/qr", (req, res, next) => {
             state: connectionState.clientState,
             generatedAt: Date.now()
         }));
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Rules API endpoints
+app.get("/api/rules", async (req, res, next) => {
+    try {
+        // Ensure CORS headers are set
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        
+        const rules = await getRules();
+        res.json(formatResponse(rules, 'Rules retrieved successfully'));
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.post("/api/rules", async (req, res, next) => {
+    try {
+        // Ensure CORS headers are set
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        
+        const { name, pattern, isRegex, reply, active } = req.body;
+        
+        if (!name || !pattern || !reply) {
+            throw new AppError(400, 'Name, pattern, and reply are required');
+        }
+        
+        const result = await addRule(name, pattern, isRegex, reply, active);
+        res.json(formatResponse({ id: result.lastID }, 'Rule created successfully'));
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.put("/api/rules/:id", async (req, res, next) => {
+    try {
+        // Ensure CORS headers are set
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        
+        const { id } = req.params;
+        const updateData = req.body;
+        
+        await updateRule(id, updateData);
+        res.json(formatResponse({ id }, 'Rule updated successfully'));
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.delete("/api/rules/:id", async (req, res, next) => {
+    try {
+        // Ensure CORS headers are set
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        
+        const { id } = req.params;
+        
+        await deleteRule(id);
+        res.json(formatResponse({ id }, 'Rule deleted successfully'));
     } catch (error) {
         next(error);
     }
