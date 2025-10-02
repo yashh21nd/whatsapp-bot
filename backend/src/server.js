@@ -38,9 +38,14 @@ const app = express();
 const server = http.createServer(app);
 const ioServer = new Server(server, {
     cors: {
-        origin: true,
+        origin: [
+            'http://localhost:5173',
+            'http://localhost:5174', 
+            'https://whatsapp-bot-one-rho.vercel.app',
+            'https://whatsapp-bot-2-1n38.onrender.com'
+        ],
         methods: ['GET', 'POST', 'OPTIONS'],
-        credentials: true
+        credentials: false
     },
     pingTimeout: 60000,
     pingInterval: 25000,
@@ -128,11 +133,16 @@ app.use(morgan('dev'));
 
 // Enhanced CORS configuration
 app.use(cors({
-    origin: true,
+    origin: [
+        'http://localhost:5173',
+        'http://localhost:5174', 
+        'https://whatsapp-bot-one-rho.vercel.app',
+        'https://whatsapp-bot-2-1n38.onrender.com'
+    ],
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with', 'Accept', 'Origin'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
-    credentials: true,
+    credentials: false,
     maxAge: 600,
     preflightContinue: false,
     optionsSuccessStatus: 204

@@ -19,13 +19,17 @@ services:
       - key: ADMIN_TOKEN
         value: whatsappbot1234
       - key: SMTP_HOST
-        value: smtp.sendgrid.net
+        value: smtp.gmail.com
       - key: SMTP_PORT
         value: 587
       - key: SMTP_USER
-        value: apikey
+        value: help.travel.ai@gmail.com
       - key: SMTP_PASS
-        value: ${SMTP_PASS}
+        value: ozdbRjgvHfbkVdxg
+      - key: SMTP_FROM
+        value: WhatsApp Bot <help.travel.ai@gmail.com>
+      - key: OTP_EXPIRY_MINUTES
+        value: 10
     healthCheckPath: /
     autoDeploy: true
 dependencies:
