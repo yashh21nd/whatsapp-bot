@@ -1,7 +1,7 @@
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://whatsapp-bot-6tsq.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || "https://whatsapp-bot-2-1n38.onrender.com";
 
 // Create axios instance
 const api = axios.create({

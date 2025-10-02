@@ -38,10 +38,7 @@ const app = express();
 const server = http.createServer(app);
 const ioServer = new Server(server, {
     cors: {
-        origin: [
-            "https://whatsapp-bot-6tsq.vercel.app",
-            "https://whatsapp-bot-one-rho.vercel.app"
-        ],
+        origin: true,
         methods: ['GET', 'POST', 'OPTIONS'],
         credentials: true
     },
@@ -129,10 +126,7 @@ const detailedLogger = morgan((tokens, req, res) => {
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan('dev'));
 app.use(cors({
-    origin: [
-        "https://whatsapp-bot-6tsq.vercel.app",
-        "https://whatsapp-bot-one-rho.vercel.app"
-    ],
+    origin: true,
     methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
