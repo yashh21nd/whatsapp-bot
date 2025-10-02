@@ -4,25 +4,10 @@ import QRCode from "qrcode";
 import "../styles/QRLogin.css";
 
 export default function QRLogin({ user, setUser }) {
-  if (!user) {
-    return (
-      <div className="main-container">
-        <div className="error-message">
-          <p>Please login or signup first.</p>
-        </div>
-      </div>
-    );
-  }
   const [connectionState, setConnectionState] = useState("disconnected");
+  const [qrCode, setQrCode] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(socket.connected);
-  // Prevent connection if user is not authenticated
-  useEffect(() => {
-    if (!user) {
-      setErrorMessage("Please login or signup first.");
-      return;
-    }})
-    // ...existing code...
 
   useEffect(() => {
     console.log("QRLogin mounted, socket state:", socket.connected);

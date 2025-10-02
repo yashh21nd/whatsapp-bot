@@ -1,13 +1,12 @@
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const API_URL = import.meta.env.VITE_API_URL || "https://whatsapp-bot-2-1n38.onrender.com";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081";
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
-  headers: { "Content-Type": "application/json" },
-  withCredentials: true
+  headers: { "Content-Type": "application/json" }
 });
 
 // Socket.IO instance

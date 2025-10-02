@@ -3,10 +3,10 @@
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState("email");
+  const [step, setStep] = useState("contact");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const [contactError, setContactError] = useState("");
 
   // Email validation function
   const validateEmail = (email) => {
@@ -14,37 +14,60 @@ const Login = ({ onLogin }) => {
     return emailRegex.test(email);
   };
 
-  const handleEmailChange = (e) => {
+  const handleContactChange = (e) => {
     const value = e.target.value;
     setEmail(value);
-    setEmailError("");
+    setContactError("");
     setError("");
     
     if (value && !validateEmail(value)) {
-      setEmailError("Please enter a valid email address");
+      setContactError("Please enter a valid email address");
     }
   };
 
   const handleSendOtp = async () => {
     if (!email) {
-      setEmailError("Email is required");
+      setContactError("Email address is required");
       return;
     }
     
     if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email address");
+      setContactError("Please enter a valid email address");
       return;
     }
 
     setLoading(true);
     setError("");
-    setEmailError("");
+    setContactError("");
     
-    // Simulate API call
-    setTimeout(() => {
-      setStep("otp");
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/auth/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'email',
+          contact: email
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setStep("otp");
+        if (data.testMode) {
+          setError(`Test mode: Check console for OTP`);
+        }
+      } else {
+        setContactError(data.error || "Failed to send OTP to email");
+      }
+    } catch (err) {
+      console.error('Send OTP error:', err);
+      setContactError("Failed to send OTP. Please try again.");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleVerifyOtp = async () => {
@@ -56,52 +79,180 @@ const Login = ({ onLogin }) => {
     setLoading(true);
     setError("");
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8081'}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'email',
+          contact: email,
+          otp: otp
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Pass user data to parent component
+        onLogin(data.user);
+      } else {
+        setError(data.error || 'Invalid OTP. Please try again.');
+      }
+    } catch (err) {
+      console.error('Verify OTP error:', err);
+      setError('Verification failed. Please try again.');
+    } finally {
       setLoading(false);
-      onLogin(email);
-    }, 1000);
+    }
   };
 
   return (
     <div style={{
       minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "#0b141a",
+      background: `linear-gradient(rgba(11, 20, 26, 0.7), rgba(30, 58, 138, 0.6), rgba(11, 20, 26, 0.7)), url('/background.jpg')`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundAttachment: "fixed",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif"
     }}>
-      <div style={{
-        background: "#ffffff",
-        borderRadius: 8,
-        boxShadow: "0 17px 50px 0 rgba(11, 20, 26, 0.19), 0 12px 15px 0 rgba(11, 20, 26, 0.24)",
-        padding: "28px 20px 40px 20px",
-        width: "400px",
-        maxWidth: "90vw",
-        textAlign: "center"
+      {/* Navigation Bar */}
+      <nav style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: "70px",
+        background: "rgba(255, 255, 255, 0.95)",
+        backdropFilter: "blur(10px)",
+        borderBottom: "1px solid rgba(0, 0, 0, 0.1)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        zIndex: 1000,
+        boxShadow: "0 2px 20px rgba(0, 0, 0, 0.1)"
       }}>
-        {/* WhatsApp Logo */}
-        <div style={{ marginBottom: "28px" }}>
+        {/* Logo and Brand */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px"
+        }}>
           <div style={{
-            width: "80px",
-            height: "80px",
+            width: "40px",
+            height: "40px",
             borderRadius: "50%",
             background: "#25d366",
-            margin: "0 auto 16px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "40px",
-            color: "white"
+            fontSize: "20px",
+            color: "white",
+            fontWeight: "bold"
           }}>
-            
+            💬
+          </div>
+          <div>
+            <h1 style={{
+              fontSize: "24px",
+              fontWeight: "600",
+              color: "#1a1a1a",
+              margin: "0",
+              letterSpacing: "-0.5px"
+            }}>
+              WhatsApp-Bot
+            </h1>
+            <p style={{
+              fontSize: "12px",
+              color: "#666",
+              margin: "0",
+              fontWeight: "500"
+            }}>
+              Business Automation Platform
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation Links */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "24px"
+        }}>
+          <a href="#features" style={{
+            textDecoration: "none",
+            color: "#666",
+            fontSize: "14px",
+            fontWeight: "500",
+            transition: "color 0.2s"
+          }} onMouseOver={(e) => e.target.style.color = "#25d366"} onMouseOut={(e) => e.target.style.color = "#666"}>
+            Features
+          </a>
+          <a href="#pricing" style={{
+            textDecoration: "none",
+            color: "#666",
+            fontSize: "14px",
+            fontWeight: "500",
+            transition: "color 0.2s"
+          }} onMouseOver={(e) => e.target.style.color = "#25d366"} onMouseOut={(e) => e.target.style.color = "#666"}>
+            Pricing
+          </a>
+          <a href="#support" style={{
+            textDecoration: "none",
+            color: "#666",
+            fontSize: "14px",
+            fontWeight: "500",
+            transition: "color 0.2s"
+          }} onMouseOver={(e) => e.target.style.color = "#25d366"} onMouseOut={(e) => e.target.style.color = "#666"}>
+            Support
+          </a>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "70px 20px 20px" // Top padding for fixed navbar
+      }}>
+        <div style={{
+          background: "rgba(255, 255, 255, 0.98)",
+          borderRadius: "16px",
+          boxShadow: "0 25px 60px rgba(11, 20, 26, 0.3), 0 8px 25px rgba(11, 20, 26, 0.2)",
+          padding: "40px 32px 48px",
+          width: "420px",
+          maxWidth: "90vw",
+          textAlign: "center",
+          backdropFilter: "blur(20px)",
+          border: "1px solid rgba(255, 255, 255, 0.2)"
+        }}>
+        {/* WhatsApp Logo */}
+        <div style={{ marginBottom: "32px" }}>
+          <div style={{
+            width: "90px",
+            height: "90px",
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #25d366 0%, #20c759 100%)",
+            margin: "0 auto 20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "45px",
+            color: "white",
+            boxShadow: "0 8px 32px rgba(37, 211, 102, 0.3)"
+          }}>
+            💬
           </div>
           <h1 style={{
-            fontSize: "28px",
+            fontSize: "32px",
             fontWeight: "300",
-            color: "#4a4a4a",
-            margin: "0 0 8px 0"
+            color: "#2c3e50",
+            margin: "0 0 8px 0",
+            letterSpacing: "-0.5px"
           }}>
             WhatsApp Business
           </h1>
@@ -111,25 +262,25 @@ const Login = ({ onLogin }) => {
             margin: "0",
             lineHeight: "20px"
           }}>
-            {step === "email" 
+            {step === "contact" 
               ? "Sign in to your WhatsApp Business account" 
               : "Enter the verification code sent to your email"}
           </p>
         </div>
 
-        {step === "email" ? (
+        {step === "contact" ? (
           <div>
             <div style={{ marginBottom: "20px", textAlign: "left" }}>
               <input
                 type="email"
                 placeholder="Email address"
                 value={email}
-                onChange={handleEmailChange}
+                onChange={handleContactChange}
                 disabled={loading}
                 style={{
                   width: "100%",
                   padding: "14px 12px",
-                  border: emailError ? "1px solid #f44336" : "1px solid #e1e8ed",
+                  border: contactError ? "1px solid #f44336" : "1px solid #e1e8ed",
                   borderRadius: "6px",
                   fontSize: "16px",
                   background: "#ffffff",
@@ -138,41 +289,41 @@ const Login = ({ onLogin }) => {
                   boxSizing: "border-box"
                 }}
                 onFocus={(e) => {
-                  if (!emailError) {
+                  if (!contactError) {
                     e.target.style.borderColor = "#25d366";
                   }
                 }}
                 onBlur={(e) => {
-                  if (!emailError) {
+                  if (!contactError) {
                     e.target.style.borderColor = "#e1e8ed";
                   }
                 }}
               />
-              {emailError && (
+              {contactError && (
                 <p style={{
                   color: "#f44336",
                   fontSize: "12px",
                   margin: "6px 0 0 0",
                   textAlign: "left"
                 }}>
-                  {emailError}
+                  {contactError}
                 </p>
               )}
             </div>
             
             <button
               onClick={handleSendOtp}
-              disabled={loading || !email || emailError}
+              disabled={loading || !email || contactError}
               style={{
                 width: "100%",
                 padding: "14px",
                 border: "none",
                 borderRadius: "6px",
-                background: loading || !email || emailError ? "#e4e6ea" : "#25d366",
-                color: loading || !email || emailError ? "#bcc0c4" : "#ffffff",
+                background: loading || !email || contactError ? "#e4e6ea" : "#25d366",
+                color: loading || !email || contactError ? "#bcc0c4" : "#ffffff",
                 fontSize: "16px",
                 fontWeight: "500",
-                cursor: loading || !email || emailError ? "not-allowed" : "pointer",
+                cursor: loading || !email || contactError ? "not-allowed" : "pointer",
                 transition: "background-color 0.2s",
                 marginBottom: "16px"
               }}
@@ -251,7 +402,7 @@ const Login = ({ onLogin }) => {
 
             <button
               onClick={() => {
-                setStep("email");
+                setStep("contact");
                 setOtp("");
                 setError("");
               }}
@@ -278,6 +429,7 @@ const Login = ({ onLogin }) => {
           lineHeight: "16px"
         }}>
           By continuing, you agree to WhatsApp's Terms of Service and Privacy Policy
+        </div>
         </div>
       </div>
     </div>

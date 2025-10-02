@@ -138,14 +138,6 @@ app.use(cors({
     optionsSuccessStatus: 204
 }));
 
-// Handle preflight requests explicitly
-app.options('*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    res.sendStatus(204);
-});
-
 // Auth and payment routes
 import authRoutes from './routes/auth.js';
 import paymentRoutes from './routes/payment.js';
@@ -499,8 +491,10 @@ client.on('message', async (msg) => {
 
     // Use LLM for natural conversation
     try {
-        const llmReply = await generateLLMReply(msg.body);
+        console.log("Calling LLM with message:", msg.body, "from chat:", chatId);
+        const llmReply = await generateLLMReply(msg.body, chatId);
         if (llmReply) {
+            console.log("LLM generated reply:", llmReply);
             await msg.reply(llmReply);
             await saveMessage(chatId, "me", msg.from, llmReply, "out", "llm");
             ioServer.emit("reply:sent", {
